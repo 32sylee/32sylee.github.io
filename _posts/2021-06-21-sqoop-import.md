@@ -39,3 +39,9 @@ $ sqoop import --fields-terminated-by , --escaped-by \\ --enclosed-by '\"'
 > Even though Hive supports escaping characters, it does not handle escaping of new-line character.
 
 Hive에서는 escaping character를 지원하지만, \n는 이스케이프 처리를 안한다고 함.
+
+Hive에 데이터를 import할 때 \n, \r, \01를 없애주는 옵션도 존재한다.
+- --hive-drop-import-delims
+  - Hive로 import할 때 string 필드의 \n, \r, \01를 drop
+- --hive-delims-replacement \<char>
+  - - Hive로 import할 때 string 필드의 \n, \r, \01를 지정된 문자로 치환한다.
