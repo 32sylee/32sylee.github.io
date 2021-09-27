@@ -25,9 +25,15 @@ author: "Sooyeon"
 
 
 - 샤드: 인덱스는 방대한 양의 데이터 저장 가능. 이 데이터가 단일 노드의 하드웨어 한도를 초과하는 경우, 샤드라는 조각으로 분할할 수 있음. 인덱스 생성 시 샤드 수 정의 가능.
-
+    - 샤딩이 필요한 이유
+        - 콘텐츠 볼륨의 수평 분할/확장이 가능해짐
+        - 작업을 여러 샤드에 분산 배치하고 병렬화함으로써 성능/처리량 늘릴 수 있음
+    
 
 - 레플리카: 인덱스의 샤드에 대해 하나 이상의 복사본을 생성한 것.
+    - replication이 필요한 이유
+        - 샤드/노드 오류가 발생하더라도 고가용성 제공. (기본 샤드와 동일한 노드에 배정되지 않는다)
+        - 모든 레플리카에서 병렬 방식으로 검색 실행 => 검색 볼륨/처리량 확장 가능.
 
 
 > 인덱스는 여러 개의 샤드로 분할 가능. 하나의 인덱스는 복제하지 않거나 1회 이상 복제 가능(기본 샤드 + 레플리카 샤드).
@@ -142,5 +148,52 @@ GET /customer/external/1?pretty
   "_version" : 1,
   "found" : true,
   "_source" : { "name": "John Doe" }
+}
+```
+
+## [인덱스 삭제](https://www.elastic.co/guide/kr/elasticsearch/reference/current/gs-delete-index.html)
+customer 인덱스 삭제
+```
+DELETE /customer?pretty
+GET /_cat/indices?v
+```
+응답
+```
+health status index uuid pri rep docs.count docs.deleted store.size pri.store.size
+```
+인덱스가 삭제되어 클러스터에 아무 것도 없는 상태가 됨.
+
+es에서 데이터에 엑세스 하는 방식의 패턴
+```
+<REST Verb>/<Index>/<Type>/<ID>
+```
+
+# [데이터 수정](https://www.elastic.co/guide/kr/elasticsearch/reference/current/gs-modifying-data.html)
+es는 실시간에 가깝게 데이터 조작, 검색 기능을 제공함.
+데이터 인덱싱/업데이터/삭제 시점부터 검색 결과에 나타나기까지 1초 정도 걸림(새로고침 간격).
+트랜잭션이 완료되면 즉시 데이터 사용 가능해지는 다른 DB와 구별되는 특징.
+
+## 문서 인덱싱/대체
+```
+PUT /customer/external/1?pretty
+{
+  "name": "John Doe"
+}
+
+PUT /customer/external/1?pretty
+{
+  "name": "Jane Doe"
+}
+```
+위와 같이 인덱스가 존재하는 상태에서 다시 동일한 명령을 실행하면 ID=1인 기존 문서를 새 문서로 대체함.
+`John Doe` -> `Jane Doe`로 바뀜
+
+인덱싱할 때 ID는 선택 사항. 지정하지 않으면 es에서 임의 ID 생성함.
+아래는 ID 없이 인덱싱하는 예시.
+ID 지정하지 않았으므로 `PUT` 대신 `POST` 사용.
+```
+POST /customer/external?pretty
+{
+  "name": "Jane Doe"
 }
 ```
